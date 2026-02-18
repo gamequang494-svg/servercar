@@ -102,13 +102,28 @@ let spd=180;
 let gpioState=[false,false,false,false,false];
 
 function wsConnect(){
-  ws=new WebSocket("ws://"+location.hostname+":8050/ws");
-  ws.onopen = ()=>{
-  wsStatus("Đã kết nối");
-  ws.send(JSON.stringify({hello:1}));
-};
 
-  ws.onclose= ()=>{wsStatus("Mất kết nối"); setTimeout(wsConnect,1000);};
+  ws = new WebSocket(
+    (location.protocol === "https:" ? "wss://" : "ws://")
+    + location.host
+    + "/ws"
+  );
+
+  ws.onopen = ()=>{
+    wsStatus("Đã kết nối");
+    ws.send(JSON.stringify({hello:1}));
+  };
+
+  ws.onclose = ()=>{
+    wsStatus("Mất kết nối - đang thử lại...");
+    setTimeout(wsConnect, 2000);
+  };
+
+  ws.onerror = ()=>{
+    wsStatus("Lỗi WebSocket");
+  };
+}
+
   ws.onmessage = e => {
 
   const j = JSON.parse(e.data);
@@ -231,3 +246,4 @@ wsConnect();
 </script>
 </body>
 </html>
+

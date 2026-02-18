@@ -122,72 +122,70 @@ function wsConnect(){
   ws.onerror = ()=>{
     wsStatus("Lỗi WebSocket");
   };
-}
 
   ws.onmessage = e => {
 
-  const j = JSON.parse(e.data);
+    const j = JSON.parse(e.data);
+    const has = v => v !== undefined && v !== null;
 
-  const has = v => v !== undefined && v !== null;
+    // ===== TELEMETRY =====
+    if(has(j.v1) || has(j.v2) || has(j.v3) || has(j.solarV)){
 
-  // ====== CHỈ XỬ LÝ TELEMETRY ======
-  if(has(j.v1) || has(j.v2) || has(j.v3) || has(j.solarV)){
+      const fmt = (v,s) =>
+        (v/100).toFixed(2)+"V ("+s+"%)";
 
-    const fmt = (v,s) =>
-      (v/100).toFixed(2)+"V ("+s+"%)";
+      if(has(j.v1))
+        p1.innerText = fmt(j.v1,j.soc1);
 
-    if(has(j.v1))
-      p1.innerText = fmt(j.v1,j.soc1);
+      if(has(j.v2))
+        p2.innerText = fmt(j.v2,j.soc2);
 
-    if(has(j.v2))
-      p2.innerText = fmt(j.v2,j.soc2);
+      if(has(j.v3))
+        p3.innerText = fmt(j.v3,j.soc3);
 
-    if(has(j.v3))
-      p3.innerText = fmt(j.v3,j.soc3);
+      if(has(j.solarV))
+        solar.innerText = (j.solarV/100).toFixed(2)+"V";
 
-    if(has(j.solarV))
-      solar.innerText = (j.solarV/100).toFixed(2)+"V";
+      if(has(j.src1) || has(j.src2)){
+        src.innerText = j.src1 ? "Pin chính" :
+                        j.src2 ? "Pin phụ" : "-";
+      }
 
-    if(has(j.src1) || has(j.src2)){
-      src.innerText = j.src1 ? "Pin chính" :
-                      j.src2 ? "Pin phụ" : "-";
+      if(has(j.chg1) || has(j.chg2) || has(j.chg3)){
+        let c=[];
+        if(j.chg1) c.push("P1");
+        if(j.chg2) c.push("P2");
+        if(j.chg3) c.push("P3");
+        chg.innerText = c.length ? c.join(", ") : "Không";
+      }
     }
 
-    if(has(j.chg1) || has(j.chg2) || has(j.chg3)){
-      let c=[];
-      if(j.chg1) c.push("P1");
-      if(j.chg2) c.push("P2");
-      if(j.chg3) c.push("P3");
-      chg.innerText = c.length ? c.join(", ") : "Không";
+    if(has(j.motor))
+      motor.innerText = j.motor ? "ĐANG CHẠY" : "DỪNG";
+
+    if(has(j.speed))
+      spdVal.innerText = j.speed;
+
+    if(has(j.trimL))
+      trimLval.innerText = j.trimL;
+
+    if(has(j.trimR))
+      trimRval.innerText = j.trimR;
+
+    for(let i=0;i<5;i++){
+      if(has(j["g"+i])){
+        gpioState[i] = j["g"+i] ? true : false;
+        let btn = document.getElementById("gpio"+i);
+        btn.className = gpioState[i] ? "gpio-on" : "gpio-off";
+      }
     }
-  }
-
-  // ====== MOTOR UPDATE ======
-  if(has(j.motor))
-    motor.innerText = j.motor ? "ĐANG CHẠY" : "DỪNG";
-
-  if(has(j.speed))
-    spdVal.innerText = j.speed;
-
-  if(has(j.trimL))
-    trimLval.innerText = j.trimL;
-
-  if(has(j.trimR))
-    trimRval.innerText = j.trimR;
-
-  // ====== GPIO UPDATE ======
-  for(let i=0;i<5;i++){
-    if(has(j["g"+i])){
-      gpioState[i] = j["g"+i] ? true : false;
-      let btn = document.getElementById("gpio"+i);
-      btn.className = gpioState[i] ? "gpio-on" : "gpio-off";
-    }
-  }
-};
-
+  };
 }
- 
-function wsStatus(s){document.getElementById("ws").innerText=s;}
+
+function wsStatus(s){
+  document.getElementById("ws").innerText=s;
+}
+
 
 /* MOTOR */
 function sendMotor(cmd){
@@ -246,4 +244,5 @@ wsConnect();
 </script>
 </body>
 </html>
+
 

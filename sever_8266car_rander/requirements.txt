@@ -1,0 +1,4 @@
+flask
+flask-sock
+gunicorn
+simple-websocket
